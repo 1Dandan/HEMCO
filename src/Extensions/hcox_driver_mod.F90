@@ -100,6 +100,7 @@ CONTAINS
     USE HCOX_ParaNOx_Mod,       ONLY : HCOX_ParaNOx_Init
     USE HCOX_LightNox_Mod,      ONLY : HCOX_LightNox_Init
     USE HCOX_SoilNox_Mod,       ONLY : HCOX_SoilNox_Init
+    USE HCOX_DustL23_Mod,       ONLY : HCOX_DustL23_Init
     USE HCOX_DustDead_Mod,      ONLY : HCOX_DustDead_Init
     USE HCOX_DustGinoux_Mod,    ONLY : HCOX_DustGinoux_Init
     USE HCOX_SeaSalt_Mod,       ONLY : HCOX_SeaSalt_Init
@@ -249,6 +250,16 @@ CONTAINS
        CALL HCOX_DustDead_Init( HcoState, 'DustDead', ExtState,  RC )
        IF ( RC /= HCO_SUCCESS ) THEN
           ErrMsg = 'Error encountered in "HCOX_DustDead_Init"!'
+          CALL HCO_ERROR( ErrMsg, RC, ThisLoc )
+          RETURN
+       ENDIF
+
+       !--------------------------------------------------------------------
+       ! Dust emissions (DustL23 model)
+       !--------------------------------------------------------------------
+       CALL HCOX_DustL23_Init( HcoState, 'DustL23', ExtState,  RC )
+       IF ( RC /= HCO_SUCCESS ) THEN
+          ErrMsg = 'Error encountered in "HCOX_DustL23_Init"!'
           CALL HCO_ERROR( ErrMsg, RC, ThisLoc )
           RETURN
        ENDIF
@@ -414,6 +425,7 @@ CONTAINS
     USE HCOX_ParaNox_Mod,       ONLY : HCOX_ParaNox_Run
     USE HCOX_LightNox_Mod,      ONLY : HCOX_LightNox_Run
     USE HCOX_SoilNox_Mod,       ONLY : HCOX_SoilNox_Run
+    USE HCOX_DustL23_Mod,       ONLY : HCOX_DustL23_Run
     USE HCOX_DustDead_Mod,      ONLY : HCOX_DustDead_Run
     USE HCOX_DustGinoux_Mod,    ONLY : HCOX_DustGinoux_Run
     USE HCOX_SeaSalt_Mod,       ONLY : HCOX_SeaSalt_Run
@@ -582,6 +594,18 @@ CONTAINS
              RETURN
           ENDIF
        ENDIF
+
+       !--------------------------------------------------------------------
+       ! Dust emissions (DustL23 model)
+       !--------------------------------------------------------------------
+       IF ( ExtState%DustL23 > 0 ) THEN
+         CALL HCOX_DustL23_Run( ExtState, HcoState, RC )
+         IF ( RC /= HCO_SUCCESS ) THEN
+            ErrMsg = 'Error encountered in "HCOX_DustL23_Run"!'
+            CALL HCO_ERROR( ErrMsg, RC, ThisLoc )
+            RETURN
+         ENDIF
+      ENDIF
 
 #ifdef TOMAS
        IF ( ExtState%TOMAS_DustDead > 0 ) THEN
@@ -757,6 +781,7 @@ CONTAINS
     USE HCOX_ParaNOx_Mod,       ONLY : HCOX_PARANOX_Final
     USE HCOX_LightNox_Mod,      ONLY : HCOX_LightNox_Final
     USE HCOX_SoilNox_Mod,       ONLY : HCOX_SoilNox_Final
+    USE HCOX_DustL23_Mod,       ONLY : HCOX_DustL23_Final
     USE HCOX_DustDead_Mod,      ONLY : HCOX_DustDead_Final
     USE HCOX_DustGinoux_Mod,    ONLY : HCOX_DustGinoux_Final
     USE HCOX_SeaSalt_Mod,       ONLY : HCOX_SeaSalt_Final
@@ -826,6 +851,10 @@ CONTAINS
           IF ( ExtState%DustDead > 0 ) THEN
              CALL HCOX_DustDead_Final( ExtState )
           ENDIF
+
+          IF ( ExtState%DustL23 > 0 ) THEN
+            CALL HCOX_DustL23_Final( ExtState )
+         ENDIF
 
 #ifdef TOMAS
           IF ( ExtState%TOMAS_DustDead > 0 ) THEN

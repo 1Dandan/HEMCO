@@ -99,6 +99,7 @@ MODULE HCOX_STATE_MOD
      ! switch in subroutine ExtStateInit below!
      !----------------------------------------------------------------------
      INTEGER                   :: Custom         ! Customizable ext.
+     INTEGER                   :: DustL23        ! DustL23 dust model
      INTEGER                   :: DustDead       ! DEAD dust model
      INTEGER                   :: DustGinoux     ! Ginoux dust emissions
      INTEGER                   :: DustAlk        ! Dust alkalinity
@@ -131,7 +132,6 @@ MODULE HCOX_STATE_MOD
      TYPE(ExtDat_2R),  POINTER :: ALBD        ! Surface albedo [-]
      TYPE(ExtDat_2R),  POINTER :: T2M         ! 2m Sfce temperature [K]
      TYPE(ExtDat_2R),  POINTER :: TSKIN       ! Surface skin temperature [K]
-     TYPE(ExtDat_2R),  POINTER :: TSOIL1      ! Soil temperature, layer 1 [K]
      TYPE(ExtDat_2R),  POINTER :: GWETROOT    ! Root soil wetness [1]
      TYPE(ExtDat_2R),  POINTER :: GWETTOP     ! Top soil moisture [-]
      TYPE(ExtDat_2R),  POINTER :: SNOWHGT     ! Snow height [mm H2O = kg H2O/m2]
@@ -161,6 +161,10 @@ MODULE HCOX_STATE_MOD
      TYPE(ExtDat_2I),  POINTER :: TropLev     ! Tropopause level [1]
      TYPE(ExtDat_2R),  POINTER :: FLASH_DENS  ! Lightning flash density [#/km2/s]
      TYPE(ExtDat_2R),  POINTER :: CONV_DEPTH  ! Convective cloud depth [m]
+     TYPE(ExtDat_2R),  POINTER :: PS          ! Surface pressure [hPa]
+     TYPE(ExtDat_2R),  POINTER :: FRSNO       ! Snow fraction [unitless]
+     TYPE(ExtDat_2R),  POINTER :: PBLH        ! Planetary boundary layer height [m]
+     TYPE(ExtDat_2R),  POINTER :: HFLUX       ! Sensible height flux due to turbulence [W m-2]
      INTEGER,          POINTER :: PBL_MAX     ! Max height of PBL [level]
      TYPE(ExtDat_3R),  POINTER :: CNV_MFC     ! Convective cloud mass flux [kg/m2/s]
      TYPE(ExtDat_3R),  POINTER :: FRAC_OF_PBL ! Fraction of grid box in PBL
@@ -291,6 +295,7 @@ CONTAINS
     ! Set all switches to -1
     !-----------------------------------------------------------------------
     ExtState%Custom         = -1
+    ExtState%DustL23        = -1
     ExtState%DustDead       = -1
     ExtState%DustGinoux     = -1
     ExtState%DustAlk        = -1
@@ -353,12 +358,6 @@ CONTAINS
     CALL ExtDat_Init ( ExtState%TSKIN, RC )
     IF ( RC /= HCO_SUCCESS ) THEN
         CALL HCO_ERROR( 'ERROR 5', RC, THISLOC=LOC )
-        RETURN
-    ENDIF
-
-    CALL ExtDat_Init ( ExtState%TSOIL1, RC )
-    IF ( RC /= HCO_SUCCESS ) THEN
-        CALL HCO_ERROR( 'Initializing TSOIL1', RC, THISLOC=LOC )
         RETURN
     ENDIF
 
@@ -515,6 +514,30 @@ CONTAINS
     CALL ExtDat_Init ( ExtState%CONV_DEPTH, RC )
     IF ( RC /= HCO_SUCCESS ) THEN
         CALL HCO_ERROR( 'ERROR 31', RC, THISLOC=LOC )
+        RETURN
+    ENDIF
+
+    CALL ExtDat_Init ( ExtState%PS, RC )
+    IF ( RC /= HCO_SUCCESS ) THEN
+        CALL HCO_ERROR( 'ERROR 4', RC, THISLOC=LOC )
+        RETURN
+    ENDIF
+
+    CALL ExtDat_Init ( ExtState%FRSNO, RC )
+    IF ( RC /= HCO_SUCCESS ) THEN
+        CALL HCO_ERROR( 'ERROR 4', RC, THISLOC=LOC )
+        RETURN
+    ENDIF
+
+    CALL ExtDat_Init ( ExtState%PBLH, RC )
+    IF ( RC /= HCO_SUCCESS ) THEN
+        CALL HCO_ERROR( 'ERROR 4', RC, THISLOC=LOC )
+        RETURN
+    ENDIF
+
+    CALL ExtDat_Init ( ExtState%HFLUX, RC )
+    IF ( RC /= HCO_SUCCESS ) THEN
+        CALL HCO_ERROR( 'ERROR 4', RC, THISLOC=LOC )
         RETURN
     ENDIF
 
@@ -683,7 +706,6 @@ CONTAINS
        CALL ExtDat_Cleanup( ExtState%ALBD       )
        CALL ExtDat_Cleanup( ExtState%T2M        )
        CALL ExtDat_Cleanup( ExtState%TSKIN      )
-       CALL ExtDat_Cleanup( ExtState%TSOIL1     )
        CALL ExtDat_Cleanup( ExtState%GWETROOT   )
        CALL ExtDat_Cleanup( ExtState%GWETTOP    )
        CALL ExtDat_Cleanup( ExtState%SNOWHGT    )
@@ -710,6 +732,10 @@ CONTAINS
        CALL ExtDat_Cleanup( ExtState%CHLR       )
        CALL ExtDat_Cleanup( ExtState%FLASH_DENS )
        CALL ExtDat_Cleanup( ExtState%CONV_DEPTH )
+       CALL ExtDat_Cleanup( ExtState%PS         )
+       CALL ExtDat_Cleanup( ExtState%FRSNO      )
+       CALL ExtDat_Cleanup( ExtState%PBLH       )
+       CALL ExtDat_Cleanup( ExtState%HFLUX      )
        CALL ExtDat_Cleanup( ExtState%JNO2       )
        CALL ExtDat_Cleanup( ExtState%JOH        )
        CALL ExtDat_Cleanup( ExtState%CNV_MFC    )

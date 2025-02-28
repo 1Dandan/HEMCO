@@ -1531,7 +1531,7 @@ CONTAINS
 
     ! Define a default PBL height
     CALL HCO_SetPBLm( HcoState = HcoState,                                   &
-                      FldName  ='PBL_HEIGHT',                                &
+                      FldName  ='PBLH',                                      &
                       PBLM     = HcoState%Grid%PBLHEIGHT%Val,                &
                       DefVal   = 1000.0_hp,                                  &
                       RC       = RC                                         )
@@ -2210,7 +2210,7 @@ CONTAINS
        ENDIF
     ENDIF
 
-    !%%%%% Air temperature %%%%%
+    !%%%%% Air and skin temperature %%%%%
     IF ( ExtState%T2M%DoUse ) THEN
        Name = 'T2M'
        CALL ExtDat_Set( HcoState,     ExtState%T2M,                          &
@@ -2224,24 +2224,9 @@ CONTAINS
        ENDIF
     ENDIF
 
-    !%%%%% Skin temperature %%%%%
     IF ( ExtState%TSKIN%DoUse ) THEN
        Name = 'TS'
        CALL ExtDat_Set( HcoState,     ExtState%TSKIN,                        &
-                        TRIM( Name ), RC,       FIRST=FIRST                 )
-       IF ( RC /= HCO_SUCCESS ) THEN
-          ErrMsg = 'Could not find quantity "' // TRIM( Name )            // &
-                   '" for the HEMCO standalone simulation!'
-          CALL HCO_Error( ErrMsg, RC, ThisLoc )
-          CALL HCO_Leave( HcoState%Config%Err, RC )
-          RETURN
-       ENDIF
-    ENDIF
-
-    !%%%%% Soil temperature %%%%%
-    IF ( ExtState%TSOIL1%DoUse ) THEN
-       Name = 'TSOIL1'
-       CALL ExtDat_Set( HcoState,     ExtState%TSOIL1,                       &
                         TRIM( Name ), RC,       FIRST=FIRST                 )
        IF ( RC /= HCO_SUCCESS ) THEN
           ErrMsg = 'Could not find quantity "' // TRIM( Name )            // &
@@ -2444,6 +2429,61 @@ CONTAINS
        ENDIF
     ENDIF
 
+    !%%%%% Surface pressure %%%%%
+    IF ( ExtState%PS%DoUse ) THEN
+      Name = 'PS'
+      CALL ExtDat_Set( HcoState,     ExtState%PS,                   &
+                       TRIM( Name ), RC,       FIRST=FIRST                 )
+      IF ( RC /= HCO_SUCCESS ) THEN
+         ErrMsg = 'Could not find quantity "' // TRIM( Name )            // &
+                  '" for the HEMCO standalone simulation!'
+         CALL HCO_Error( ErrMsg, RC, ThisLoc )
+         CALL HCO_Leave( HcoState%Config%Err, RC )
+         RETURN
+      ENDIF
+   ENDIF
+    !%%%%% Fractional snow cover %%%%%
+    IF ( ExtState%FRSNO%DoUse ) THEN
+      Name = 'FRSNO'
+      CALL ExtDat_Set( HcoState,     ExtState%FRSNO,                   &
+                       TRIM( Name ), RC,       FIRST=FIRST                 )
+      IF ( RC /= HCO_SUCCESS ) THEN
+         ErrMsg = 'Could not find quantity "' // TRIM( Name )            // &
+                  '" for the HEMCO standalone simulation!'
+         CALL HCO_Error( ErrMsg, RC, ThisLoc )
+         CALL HCO_Leave( HcoState%Config%Err, RC )
+         RETURN
+      ENDIF
+    ENDIF
+
+    !%%%%% PBLH %%%%%
+    IF ( ExtState%PBLH%DoUse ) THEN
+      Name = 'PBLH'
+      CALL ExtDat_Set( HcoState,     ExtState%PBLH,                   &
+                       TRIM( Name ), RC,       FIRST=FIRST                 )
+      IF ( RC /= HCO_SUCCESS ) THEN
+         ErrMsg = 'Could not find quantity "' // TRIM( Name )            // &
+                  '" for the HEMCO standalone simulation!'
+         CALL HCO_Error( ErrMsg, RC, ThisLoc )
+         CALL HCO_Leave( HcoState%Config%Err, RC )
+         RETURN
+      ENDIF
+    ENDIF
+
+    !%%%%% HFLUX %%%%%
+    IF ( ExtState%HFLUX%DoUse ) THEN
+      Name = 'HFLUX'
+      CALL ExtDat_Set( HcoState,     ExtState%HFLUX,                   &
+                       TRIM( Name ), RC,       FIRST=FIRST                 )
+      IF ( RC /= HCO_SUCCESS ) THEN
+         ErrMsg = 'Could not find quantity "' // TRIM( Name )            // &
+                  '" for the HEMCO standalone simulation!'
+         CALL HCO_Error( ErrMsg, RC, ThisLoc )
+         CALL HCO_Leave( HcoState%Config%Err, RC )
+         RETURN
+      ENDIF
+    ENDIF
+    
     !%%%%% Fractional coverage fields %%%%%
     IF ( ExtState%FRCLND%DoUse ) THEN
        Name = 'FRCLND'
@@ -3072,9 +3112,7 @@ CONTAINS
        CALL Print_Dry_Run_Warning( 6 )
 
        ! Print dry-run header to the HEMCO log file
-       IF ( HcoState%Config%Err%LUN > 0 ) THEN
-          CALL Print_Dry_Run_Warning( HcoState%Config%Err%LUN )
-       ENDIF
+       CALL Print_Dry_Run_Warning( HcoState%Config%Err%LUN )
 
     ELSE
 
@@ -3149,9 +3187,7 @@ CONTAINS
        CALL Print_Dry_Run_Warning( 6 )
 
        ! Print dry-run header to the HEMCO log file
-       IF ( HcoState%Config%Err%LUN > 0 ) THEN
-          CALL Print_Dry_Run_Warning( HcoState%Config%Err%LUN )
-       ENDIF
+       CALL Print_Dry_Run_Warning( HcoState%Config%Err%LUN )
 
     ENDIF
 
